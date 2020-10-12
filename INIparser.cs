@@ -50,7 +50,7 @@ namespace OOP_1Lab
                     Console.ReadKey(true);
                     }
 
-                string Str1 = Str.Split('=')[0], Str2 = Str.Substring(Str1.Length + 2, Str.Length - Str1.Length - 2);
+                string Str1 = Str.Split('=')[0], Str2 = Str.Substring(Str1.Length, Str.Length - Str1.Length);
                 Str1 = Str1.Substring(0, Str1.Length - 1);
 
                 if (Regex.IsMatch(Str1, @"[^a-zA-Z0-9_]"))
