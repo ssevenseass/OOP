@@ -6,158 +6,113 @@ using System.Text.RegularExpressions;
 namespace OOP_1Lab
 {
     class INIparser
-{
-    private static readonly Dictionary<string, Dictionary<string, string>> KeyOfPairs = new Dictionary<string, Dictionary<string, string>>();
-    public INIparser(string filename)
     {
-        if (!File.Exists(filename))
+        private static readonly Dictionary<string, Dictionary<string, string>> KeyOfPairs =
+            new Dictionary<string, Dictionary<string, string>>();
+
+        public INIparser(string filename)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(filename + "-file is not found");
-            Console.ResetColor();
-            Console.ReadKey(true);
-            }
-    
-    string Section = "";
+            
+            if (!File.Exists(filename))
 
-        foreach (string StrLine in File.ReadAllLines(filename))
-        {
-            string Str = StrLine.Split(';')[0];
+                throw new FileIsNotFoundException("file is not found " + filename);
 
-            if (Str.StartsWith("[") && Str.EndsWith("]"))
+
+            string section = "";
+
+            foreach (string strLine in File.ReadAllLines(filename))
             {
-                Section = Str.Substring(1, Str.Length - 2);
+                string str = strLine.Split(';')[0];
+                str = str.Replace(" ", "");
 
-                if (Regex.IsMatch(Section, @"[^a-zA-Z0-9_]"))
+                if (str.StartsWith("[") && str.EndsWith("]"))
                 {
+                    section = str.Substring(1, str.Length - 2);
 
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(Section + "- not a Section");
-                    Console.ResetColor();
-                    Console.ReadKey(true);
-                    }
+                    if (Regex.IsMatch(section, @"[^a-zA-Z0-9_]"))
 
-                KeyOfPairs.Add(Section, new Dictionary<string, string>());
-            }
+                        throw new NotASection(section + "not Section");
 
-            else if (Str.Length > 0 && Str.Split('=').Length > 1)
-            {
-                if (Section == "")  
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(Section + "- not Section");
-                    Console.ResetColor();
-                    Console.ReadKey(true);
-                    }
-
-                string Str1 = Str.Split('=')[0], Str2 = Str.Substring(Str1.Length, Str.Length - Str1.Length);
-                Str1 = Str1.Substring(0, Str1.Length - 1);
-
-                if (Regex.IsMatch(Str1, @"[^a-zA-Z0-9_]"))
-                {
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(Str1 + " is not a name.");
-                    Console.ResetColor();
-                    Console.ReadKey(true);
+                    KeyOfPairs.Add(section, new Dictionary<string, string>());
+                    if (section != section?.Replace(" ", ""))
+                    throw new NotASection("not a section");
                 }
 
-                KeyOfPairs[Section].Add(Str1, Str2);
-               
+                else if (str.Length > 0 && str.Split('=').Length > 1)
+                {
+                    if (section == "")
 
-            }
+                        throw new NotASection(section + "not Section");
 
-            else if (Str.Length > 1)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(Str + "- not valid");
-                Console.ResetColor();
-                Console.ReadKey(true);
+                    string str1 = str.Split('=')[0], str2 = str.Substring(str1.Length, str.Length - str1.Length);
+                    str1 = str1.Trim();
+                    str2 = str2.Trim();
+                    if (str1 != str1?.Replace(" ", ""))
+                        throw new NotAName("not a name");
+                        KeyOfPairs[section].Add(str1, str2);
 
+                }
+
+                else if (str.Length > 1)
+                {
+
+                    throw new WrongCommand("not valid" + str);
+
+                }
             }
         }
 
-
-    }
-
-    public string GetTheStringValue(string Section, string Name)
-    {
-        if (!KeyOfPairs.ContainsKey(Section))
+        public string GetTheStringValue(string section, string name)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("not Section");
-            Console.ResetColor();
-            Console.ReadKey(true);
-            }
+            if (!KeyOfPairs.ContainsKey(section))
+                throw new NotASection("not section");
+            if (!KeyOfPairs[section].ContainsKey(name))
+                throw new NotAName("not name in section");
+            return KeyOfPairs[section][name];
+        }
 
-        if (!KeyOfPairs[Section].ContainsKey(Name))
+
+        public int GetTheIntValue(string section, string name)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("not Name in Section");
-            Console.ResetColor();
-            Console.ReadKey(true);
-            }
-
-        return KeyOfPairs[Section][Name];
-    }
-
-    public int GetTheIntValue(string Section, string Name)
-    {
-        string str = GetTheStringValue(Section, Name);
+            string str = GetTheStringValue(section, name);
             if (!Int32.TryParse(str, out int number))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(Section + " " + Name + "not integer");
-                Console.ResetColor();
-                Console.ReadKey(true);
-            }
-
+                throw new NotAnIntegerNumber(section + " " + name + "not integer");
             return number;
-    }
+        }
 
-    public double GetTheDoubleValue(string Section, string Name)
-    {
-        string str = GetTheStringValue(Section, Name);
+        public double GetTheDoubleValue(string Section, string Name)
+        {
+            string str = GetTheStringValue(Section, Name);
             if (!Double.TryParse(str, out double number))
+                throw new NotADoubleNumber(Section + " " + Name + "not double");
+            return number;
+        }
+
+        public string[] GetSection()
+        {
+            string[] number = new string[KeyOfPairs.Keys.Count];
+            int i = 0;
+            foreach (string key in KeyOfPairs.Keys)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(Section + " " + Name + "not double");
-                Console.ResetColor();
-                Console.ReadKey(true);
+                number[i++] = key;
             }
 
             return number;
-    }
-
-    public string[] GetSection()
-    {
-        string[] number = new string[KeyOfPairs.Keys.Count];
-        int i = 0;
-        foreach (string key in KeyOfPairs.Keys)
-        {
-            number[i++] = key;
         }
 
-        return number;
-    }
-
-    public string[] GetName(string Section)
-    {
-        if (!KeyOfPairs.ContainsKey(Section))
+        public string[] GetName(string section)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(Section + "-not a Section");
-            Console.ResetColor();
-            Console.ReadKey(true);
-        }
-        string[] number = new string[KeyOfPairs[Section].Keys.Count];
-        int i = 0;
-        foreach (string key in KeyOfPairs[Section].Keys)
-        {
-            number[i++] = key;
-        }
+            if (!KeyOfPairs.ContainsKey(section))
+                throw new NotASection("not Section");
 
-        return number;
+            string[] number = new string[KeyOfPairs[section].Keys.Count];
+            int i = 0;
+            foreach (string key in KeyOfPairs[section].Keys)
+            { 
+                number[i++] = key;
+            }
+
+            return number;
+        }
     }
-  }
 }
